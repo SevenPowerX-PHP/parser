@@ -17,7 +17,9 @@
 	{
 		//Get page
 		$html = file_get_html($url);
-		foreach ($html->find("li.category") as $link_to_category) {
+//		$html->find("li[id=category_685]");
+
+		foreach ($html->find("div ul li.category") as $link_to_category) {
 			echo $link_to_category . '<br>' . PHP_EOL;
 		}
 
