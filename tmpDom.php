@@ -19,8 +19,10 @@
 		$html = file_get_html($url);
 //		$html->find("li[id=category_685]");
 
-		foreach ($html->find("div ul li.category") as $link_to_category) {
+		foreach ($html->find("div[class='content page'] ul li.category span a") as $link_to_category) {
 			echo $link_to_category . '<br>' . PHP_EOL;
+//			var_dump($link_to_category);
+			die();
 		}
 
 
