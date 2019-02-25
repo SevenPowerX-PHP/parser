@@ -8,6 +8,7 @@
 
 //Подключаем библиотеку
 	require_once 'lib/simple_html_dom.php';
+	require_once 'src/DbConnectMysql.php';
 
 
 	function getCategoryLinks($url, $selectors_category)
