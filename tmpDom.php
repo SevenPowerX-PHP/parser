@@ -6,10 +6,17 @@
 	 * Time: 12:54
 	 */
 
-//Подключаем библиотеку
+	require_once __DIR__ . '/config/db_config.php';
+
+	//Подключаем библиотеку
 	require_once 'lib/simple_html_dom.php';
 	require_once 'src/DbConnectMysql.php';
 
+
+	$db = new DbConnectMysql(HOST, USER, PASS, DB_NAME);
+	$showTable = 'show tables';
+	var_dump($db->query('show tables'));
+	die('Стоп!!!');
 
 	function getCategoryLinks($url, $selectors_category)
 	{
