@@ -11,15 +11,29 @@
 	//Подключаем библиотеку
 	require_once 'lib/simple_html_dom.php';
 	require_once 'src/DbConnectMysql.php';
-
+//	global $db;
 
 	$db = new DbConnectMysql(HOST, USER, PASS, DB_NAME);
-	$showTable = 'show tables';
-	var_dump($db->query('show tables'));
-	die('Стоп!!!');
+//	$db->escape();
+//	$showTable = 'show tables';
+//	var_dump($db->query($showTable));
+//	var_dump($db->query('SELECT * FROM product'));
+//
+//	$res = $db->query("INSERT INTO product (url_product) VALUES ('test2.999')");
+//	var_dump($res);
+//	$url_product = 'http://www.hendi.pl';
+//					$db->escape($url_product);
+//	$db->query("INSERT INTO product (url_product) VALUES ('{$url_product}')");
+//	die('Стоп!!!');
 
-	function getCategoryLinks($url, $selectors_category)
+	/**
+	 * @param $url
+	 * @param $selectors_category
+	 * @param $db
+	 */
+	function getCategoryLinks($url, $selectors_category, $db)
 	{
+
 		//Get page
 		$html = file_get_html($url);
 
@@ -38,8 +52,10 @@
 
 				if (isset($link_to_product->href)) {
 					$url_product = $link_to_product->href = 'http://www.hendi.pl' . $link_to_product->href;
+					$url_product = $db->escape($url_product);
 
-					echo $url_product . PHP_EOL;
+					$db->query("INSERT INTO product (url_product) VALUES ('{$url_product}')");
+					echo $url_product . '<br>' . PHP_EOL;
 				}
 
 
@@ -51,4 +67,4 @@
 	//URL for page
 	$url = 'http://www.hendi.pl/site_map';
 	$selector_category = "div[class='content page'] ul li ul li.category span a";
-	getCategoryLinks($url, $selector_category);
+	getCategoryLinks($url, $selector_category, $db);

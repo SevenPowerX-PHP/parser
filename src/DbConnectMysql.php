@@ -30,6 +30,7 @@
 			$this->db_name = $db_name;
 
 			$this->connection = new mysqli($host, $user, $pass, $db_name);
+
 			$this->query('SET NAMES UTF8');
 			if (mysqli_connect_error()) {
 				throw new Exception('Cold not connect to DB');
@@ -39,7 +40,7 @@
 
 		/**
 		 * @param $sql
-		 * @return bool|mysqli_result
+		 * @return mixed
 		 * @throws Exception
 		 */
 		public function query($sql)
@@ -49,13 +50,15 @@
 			}
 			$result = $this->connection->query($sql);
 
-			if (mysqli_error($this->connection)) {
+			/*if (mysqli_error($this->connection)) {
 				throw new Exception(mysqli_error($this->connection));
 
 			}
 			if (is_bool($result)) {
 				return $result;
-			}
+			}*/
+			for ($data = []; $row = mysqli_fetch_assoc($result); $data[] = $row) ;
+			return $data;
 		}
 
 
