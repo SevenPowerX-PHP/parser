@@ -17,3 +17,22 @@
 
 Wyposażenie i sprzęt dla gastronomii | www.hendi.pl
 Wysokiej klasy urządzenia gastronomiczne, wyposażenie dla restauracji i sprzęt do kuchni. Zapraszamy do zapoznania się z naszą ofertą.
+
+
+описание table product
+поля таблицы:
+
+1. id 
+2. url продукта
+3. data_parsing
+4. h1
+5. content_ru(Описание товаров)
+6. content_pl(Описание товаров)
+7. content_en(Описание товаров)
+9. img(Картинки)
+10. price(Цены)
+11. status(Наличие на складе)
+12. tags(Теги (Метки))
+13. attribute Атрибуты(Опции, Параметры)
+14. Должно быть 3 языка (Польский, Руский, Английский)
+
