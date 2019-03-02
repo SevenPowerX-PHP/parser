@@ -14,24 +14,13 @@
 //	global $db;
 
 	$db = new DbConnectMysql(HOST, USER, PASS, DB_NAME);
-//	$db->escape();
-//	$showTable = 'show tables';
-//	var_dump($db->query($showTable));
-//	var_dump($db->query('SELECT * FROM product'));
-//
-//	$res = $db->query("INSERT INTO product (url_product) VALUES ('test2.999')");
-//	var_dump($res);
-//	$url_product = 'http://www.hendi.pl';
-//					$db->escape($url_product);
-//	$db->query("INSERT INTO product (url_product) VALUES ('{$url_product}')");
-//	die('Стоп!!!');
 
 	/**
 	 * @param $url
 	 * @param $selectors_category
 	 * @param $db
 	 */
-	function getCategoryLinks($url, $selectors_category, $db)
+	function getCategoryAndProductLinks($url, $selectors_category, $db)
 	{
 
 		//Get page
@@ -54,7 +43,7 @@
 					$url_product = $link_to_product->href = 'http://www.hendi.pl' . $link_to_product->href;
 					$url_product = $db->escape($url_product);
 
-					$db->query("INSERT INTO product (url_product) VALUES ('{$url_product}')");
+					$db->query("INSERT ignore INTO product (url_product) VALUES ('{$url_product}')");
 					echo $url_product . '<br>' . PHP_EOL;
 				}
 
@@ -63,8 +52,48 @@
 		}
 	}
 
+	/**
+	 * @param $url_product
+	 * @param $db
+	 */
+	function getProduct($url_product, $db)
+	{
+
+		//Get page
+		$html = file_get_html($url_product);
+		// get h1
+		$h1_selectors_product = "div[class=product__data] h1[class=product__data__name]";
+		$h1 = $html->find($h1_selectors_product, 0)->plaintext;
+		//$db->query("UPDATE product SET h1='{$db->escape($h1)}' WHERE url_product = '{$db->escape($url_product)}'");
+
+		//get content
+		$content_selector_product = "div[class=product__desc__content] p";
+//		$content_pl = $html->find($content_selector_product, 0)
+//			. $html->find($content_selector_product, 1)
+//			. $html->find($content_selector_product, 2);
+		$content_pl = '';
+		$html->find('div[class=alior_payment]')->innertext = '';
+		foreach ($html->find($content_selector_product) as $content) {
+			$content_pl .= $content;
+		}
+		//$db->query("UPDATE product SET content_pl='{$db->escape($content_pl)}' WHERE url_product = '{$db->escape($url_product)}'");
+
+		//get img
+		/*		$img_selector_product = "div[class='product__images__thumbs js--product-slider-nav'] img";
+				$imgs = $html->find($img_selector_product);
+				foreach($imgs as $img) {
+					var_dump($img);
+					echo $img->src . '<br>';
+		}*/
+		//var_dump($content_pl);
+
+		echo $content_pl;
+	}
+
 
 	//URL for page
 	$url = 'http://www.hendi.pl/site_map';
 	$selector_category = "div[class='content page'] ul li ul li.category span a";
-	getCategoryLinks($url, $selector_category, $db);
+
+	$url_product = "https://www.hendi.pl/obrobka-mechaniczna/nadziewarka-do-kielbas-profi-line-pionowa-7-litrow-kod-282090.html";
+	getProduct($url_product, $db);

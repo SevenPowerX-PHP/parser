@@ -50,13 +50,13 @@
 			}
 			$result = $this->connection->query($sql);
 
-			/*if (mysqli_error($this->connection)) {
+			if (mysqli_error($this->connection)) {
 				throw new Exception(mysqli_error($this->connection));
 
 			}
 			if (is_bool($result)) {
 				return $result;
-			}*/
+			}
 			for ($data = []; $row = mysqli_fetch_assoc($result); $data[] = $row) ;
 			return $data;
 		}

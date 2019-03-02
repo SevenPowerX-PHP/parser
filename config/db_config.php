@@ -6,13 +6,13 @@
 	 * Time: 11:47
 	 */
 
-	error_reporting('E_All');
-//	echo ini_get('display_errors');
-	if (!ini_get('display_errors')) {
-		ini_set('display_errors', '1');
-	}
-//	echo ini_get('display_errors');
-
+//	error_reporting('E_All');
+////	echo ini_get('display_errors');
+//	if (!ini_get('display_errors')) {
+//		ini_set('display_errors', '1');
+//	}
+////	echo ini_get('display_errors');
+//
 
 	//DB
 	define('HOST', 'localhost');
