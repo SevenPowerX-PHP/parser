@@ -6,48 +6,69 @@
 	 * Time: 12:54
 	 */
 
+    ini_set('max_execution_time', 0);
+
 	require_once __DIR__ . '/config/db_config.php';
 
 	//Подключаем библиотеку
-	require_once 'lib/simple_html_dom.php';
+	require_once 'lib/phpQuery.php';
 	require_once 'src/DbConnectMysql.php';
-//	global $db;
 
 	$db = new DbConnectMysql(HOST, USER, PASS, DB_NAME);
+
+	function checkProductInDB($url) {
+	    global $db;
+
+	    $query = $db->query("SELECT * FROM product WHERE url_product = '" . $db->escape($url) .  "'");
+
+	    if (count($query) == 1) {
+            $query = array_pop($query);
+	        return $query['id'];
+        } else {
+	        false;
+        }
+    }
+
+    function getProducts() {
+        global $db;
+
+        $query = $db->query("SELECT id FROM product");
+
+        return $query;
+    }
 
 	/**
 	 * @param $url
 	 * @param $selectors_category
 	 * @param $db
 	 */
-	function getCategoryAndProductLinks($url, $selectors_category, $db)
+	function getCategoryAndProductLinks($url, $selectors_category)
 	{
+	    global $db;
 
 		//Get page
-		$html = file_get_html($url);
+		$html = initPhpQuery($url);
 
-		foreach ($html->find($selectors_category) as $link_to_category) {
+		foreach ($html->find($selectors_category) as $links) {
+            $link_to_category = pq($links);
 
-			if (isset($link_to_category->href)) {
-				$url_category = $link_to_category->href = 'http://www.hendi.pl' . $link_to_category->href;
-
-				//	echo $url_category . '<br>';
-			}
+            $url_category = 'http://www.hendi.pl' . $link_to_category->attr('href');
 
 			/** @var string $url_category */
-			$html = file_get_html($url_category);
+			$html = initPhpQuery($url_category);
 			$selectors_product = "ul.products_list li a";
-			foreach ($html->find($selectors_product) as $link_to_product) {
+			foreach ($html->find($selectors_product) as $links_product) {
+                $link_to_product = pq($links_product);
 
-				if (isset($link_to_product->href)) {
-					$url_product = $link_to_product->href = 'http://www.hendi.pl' . $link_to_product->href;
-					$url_product = $db->escape($url_product);
+                $url_product = 'http://www.hendi.pl' . $link_to_product->attr('href');
+                $url_product = $db->escape($url_product);
 
-					$db->query("INSERT ignore INTO product (url_product) VALUES ('{$url_product}')");
-					echo $url_product . '<br>' . PHP_EOL;
-				}
+                $db->query("INSERT ignore INTO product (url_product) VALUES ('{$url_product}')");
 
+                // TODO:: maybe thinking about another algorithm
+                getProduct($url_product);
 
+                echo $url_product . '<br>' . PHP_EOL;
 			}
 		}
 	}
@@ -56,44 +77,97 @@
 	 * @param $url_product
 	 * @param $db
 	 */
-	function getProduct($url_product, $db)
+	function getProduct($url_product)
 	{
+        global $db;
 
 		//Get page
-		$html = file_get_html($url_product);
+		$html = initPhpQuery($url_product);
+
+		// Remove Other div's
+        $other_divs = '.alior_payment, script';
+        $html->find($other_divs)->remove();
+
 		// get h1
-		$h1_selectors_product = "div[class=product__data] h1[class=product__data__name]";
-		$h1 = $html->find($h1_selectors_product, 0)->plaintext;
-		//$db->query("UPDATE product SET h1='{$db->escape($h1)}' WHERE url_product = '{$db->escape($url_product)}'");
+		$h1_selectors_product = ".product__data .product__data__name";
+		$h1 = $html->find($h1_selectors_product, 0)->text();
 
-		//get content
-		$content_selector_product = "div[class=product__desc__content] p";
-//		$content_pl = $html->find($content_selector_product, 0)
-//			. $html->find($content_selector_product, 1)
-//			. $html->find($content_selector_product, 2);
-		$content_pl = '';
-		$html->find('div[class=alior_payment]')->innertext = '';
-		foreach ($html->find($content_selector_product) as $content) {
-			$content_pl .= $content;
-		}
-		//$db->query("UPDATE product SET content_pl='{$db->escape($content_pl)}' WHERE url_product = '{$db->escape($url_product)}'");
+        //get content
+        $content_selector_product = ".product__desc__content";
+        $content_pl = $html->find($content_selector_product)->html();
 
-		//get img
-		/*		$img_selector_product = "div[class='product__images__thumbs js--product-slider-nav'] img";
-				$imgs = $html->find($img_selector_product);
-				foreach($imgs as $img) {
-					var_dump($img);
-					echo $img->src . '<br>';
-		}*/
-		//var_dump($content_pl);
+        // Get images
+        $sliders = $html->find('li.slider__list__item:not(.img_movie)');
+        $images = '';
+        foreach ($sliders as $slider) {
+            $img = pq($slider);
+            $images .= 'http://www.hendi.pl' . $img->find('a')->attr('href') . ',';
+        }
 
-		echo $content_pl;
+        // Get price
+        $price = (float)$html->find('.nett_price')->text();
+
+        // Get status itemprop="availability"
+        $status_text = (string)$html->find('link[itemprop="availability"]')->attr('content');
+        if ($status_text == 'Dostępny') {
+            $status = 1;
+        } else {
+            $status = 0;
+        }
+
+        // Get tags
+        $tags = '';
+
+        // Get Attributes
+        $attributes = $html->find('.product_description_table tr');
+        $attributes_json = [];
+        foreach ($attributes as $attribute) {
+            $elem = pq($attribute);
+            $attributes_json[] = [
+                'name'  => $elem->find('th')->text(),
+                'value' => $elem->find('td')->text()
+            ];
+        }
+
+
+        $product_id = checkProductInDB($url_product);
+        if ($product_id) {
+            $db->query("UPDATE product SET 
+                                            h1='{$db->escape($h1)}', 
+                                            content_pl='{$db->escape($content_pl)}', 
+                                            content_ru='{$db->escape($content_pl)}', 
+                                            content_en='{$db->escape($content_pl)}',  
+                                            img='{$db->escape($images)}', 
+                                            price='{$db->escape($price)}', 
+                                            status='{$db->escape($status)}', 
+                                            tags='{$db->escape($tags)}', 
+                                            attribute='{$db->escape(json_encode($attributes_json))}',
+                                            data_parsing='" . date("Y-m-d") ."' 
+    
+              WHERE id = '{$product_id}'");
+
+            return $product_id;
+        } else {
+            $db->query("INSERT INTO product SET 
+                                            url_product = '{$url_product}',
+                                            h1='{$db->escape($h1)}', 
+                                            content_pl='{$db->escape($content_pl)}', 
+                                            content_ru='{$db->escape($content_pl)}', 
+                                            content_en='{$db->escape($content_pl)}',  
+                                            img='{$db->escape($images)}', 
+                                            price='{$db->escape($price)}', 
+                                            status='{$db->escape($status)}', 
+                                            tags='{$db->escape($tags)}', 
+                                            attribute='{$db->escape(json_encode($attributes_json))}',
+                                            data_parsing='" . date("Y-m-d") ."'");
+
+            return $db->getLastId();
+        }
 	}
 
 
-	//URL for page
+	//Parse Site Init
 	$url = 'http://www.hendi.pl/site_map';
-	$selector_category = "div[class='content page'] ul li ul li.category span a";
+	$selector_category = ".content.page li.category span a";
 
-	$url_product = "https://www.hendi.pl/obrobka-mechaniczna/nadziewarka-do-kielbas-profi-line-pionowa-7-litrow-kod-282090.html";
-	getProduct($url_product, $db);
+	getCategoryAndProductLinks($url, $selector_category);
