@@ -8,7 +8,7 @@
 
     ini_set('max_execution_time', 0);
 
-	require_once __DIR__ . '/config/db_config.php';
+	require_once __DIR__ . '/config/main_config.php';
 
 	//Подключаем библиотеку
 	require_once 'lib/phpQuery.php';
@@ -97,6 +97,9 @@
         $content_selector_product = ".product__desc__content";
         $content_pl = $html->find($content_selector_product)->html();
 
+		$content_ru = gtranslate($content_pl, 'pl', 'ru');
+		$content_en = gtranslate($content_pl, 'pl', 'en');
+
         // Get images
         $sliders = $html->find('li.slider__list__item:not(.img_movie)');
         $images = '';
@@ -136,8 +139,8 @@
             $db->query("UPDATE product SET 
                                             h1='{$db->escape($h1)}', 
                                             content_pl='{$db->escape($content_pl)}', 
-                                            content_ru='{$db->escape($content_pl)}', 
-                                            content_en='{$db->escape($content_pl)}',  
+                                            content_ru='{$db->escape($content_ru)}', 
+                                            content_en='{$db->escape($content_en)}',  
                                             img='{$db->escape($images)}', 
                                             price='{$db->escape($price)}', 
                                             status='{$db->escape($status)}', 
@@ -164,6 +167,22 @@
 
             return $db->getLastId();
         }
+	}
+
+
+	// Translate API
+	function gtranslate($str, $lang_from, $lang_to)
+	{
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_URL, 'https://api.multillect.com/translate/json/1.0/987?method=translate/api/translate&from=' . urlencode($lang_from) . '&to=' . urlencode($lang_to) . '&text=' . urlencode($str) . '&politeness=&sig=7af031c46b9a323e41301ea2a40d9440');
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		$out = curl_exec($curl);
+		curl_close($curl);
+		$decode = json_decode($out);
+		if (!$decode->error) {
+			return $decode->result->translated;
+		}
+		return false;
 	}
 
 
