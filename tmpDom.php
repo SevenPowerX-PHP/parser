@@ -40,7 +40,7 @@
 	/**
 	 * @param $url
 	 * @param $selectors_category
-	 * @param $db
+	 * @throws Exception
 	 */
 	function getCategoryAndProductLinks($url, $selectors_category)
 	{
@@ -75,7 +75,8 @@
 
 	/**
 	 * @param $url_product
-	 * @param $db
+	 * @return
+	 * @throws Exception
 	 */
 	function getProduct($url_product)
 	{
