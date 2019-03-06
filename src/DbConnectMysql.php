@@ -6,70 +6,61 @@
 	 * Time: 12:59
 	 */
 
-	class DbConnectMysql
-	{
-		protected $connection;
-		protected $host;
-		protected $user;
-		protected $pass;
-		protected $db_name;
+    class DbConnectMysql {
+        private $link;
 
-		/**
-		 * DbConnectMysql constructor.
-		 * @param $host
-		 * @param $user
-		 * @param $pass
-		 * @param $db_name
-		 * @throws Exception
-		 */
-		public function __construct($host, $user, $pass, $db_name)
-		{
-			$this->host = $host;
-			$this->user = $user;
-			$this->pass = $pass;
-			$this->db_name = $db_name;
+        public function __construct($hostname, $username, $password, $database, $port = '3306') {
+            $this->link = new \mysqli($hostname, $username, $password, $database, $port);
 
-			$this->connection = new mysqli($host, $user, $pass, $db_name);
+            if ($this->link->connect_error) {
+                trigger_error('Error: Could not make a database link (' . $this->link->connect_errno . ') ' . $this->link->connect_error);
+                exit();
+            }
 
-			$this->query('SET NAMES UTF8');
-			if (mysqli_connect_error()) {
-				throw new Exception('Cold not connect to DB');
-			}
+            $this->link->set_charset("utf8");
+            $this->link->query("SET SQL_MODE = ''");
+        }
 
-		}
+        public function query($sql) {
+            $query = $this->link->query($sql);
 
-		/**
-		 * @param $sql
-		 * @return mixed
-		 * @throws Exception
-		 */
-		public function query($sql)
-		{
-			if (!$this->connection) {
-				return false;
-			}
-			$result = $this->connection->query($sql);
+            if (!$this->link->errno) {
+                if ($query instanceof \mysqli_result) {
+                    $data = array();
 
-			if (mysqli_error($this->connection)) {
-				throw new Exception(mysqli_error($this->connection));
+                    while ($row = $query->fetch_assoc()) {
+                        $data[] = $row;
+                    }
 
-			}
-			if (is_bool($result)) {
-				return $result;
-			}
-			for ($data = []; $row = mysqli_fetch_assoc($result); $data[] = $row) ;
-			return $data;
-		}
+                    $result = new \stdClass();
+                    $result->num_rows = $query->num_rows;
+                    $result->row = isset($data[0]) ? $data[0] : array();
+                    $result->rows = $data;
 
+                    $query->close();
 
-		public function escape($str)
-		{
-			return mysqli_escape_string($this->connection, $str);
-		}
+                    return $result;
+                } else {
+                    return true;
+                }
+            } else {
+                trigger_error('Error: ' . $this->link->error  . '<br />Error No: ' . $this->link->errno . '<br />' . $sql);
+            }
+        }
 
-		public function insertId()
-		{
-			return mysqli_insert_id($this->connection);
-		}
+        public function escape($value) {
+            return $this->link->real_escape_string($value);
+        }
 
-	}
+        public function countAffected() {
+            return $this->link->affected_rows;
+        }
+
+        public function getLastId() {
+            return $this->link->insert_id;
+        }
+
+        public function __destruct() {
+            $this->link->close();
+        }
+    }
