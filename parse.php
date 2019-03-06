@@ -11,11 +11,13 @@ ini_set('max_execution_time', 0);
 require_once __DIR__ . '/config/main_config.php';
 
 //Подключаем библиотеку
-require_once 'lib/phpQuery.php';
-require_once 'src/DbConnectMysql.php';
+require_once __DIR__ . '/lib/phpQuery.php';
+require_once __DIR__ . '/lib/GoogleTranslateForFree.php';
+require_once __DIR__ . '/src/DbConnectMysql.php';
 
 //Connect Opencart Parse
-require_once 'opencart.php';
+require_once __DIR__ . '/opencart.php';
+
 $opencart = new OpencartParse();
 
 /**
@@ -242,27 +244,27 @@ function getProduct($url_product)
                 'tag' => ''
             ],
             2 => [
-                'name' => $h1_en,
-                'description' => $content_en,
-                'meta_title' => $meta_title_en,
-                'meta_h1' => $h1_en,
-                'meta_description' => $meta_description_en,
-                'meta_keyword' => $meta_keyword_en,
+                'name' => ($h1_en ? $h1_en : $h1),
+                'description' => ($content_en ? $content_en : $content_pl),
+                'meta_title' => ($meta_title_en ? $meta_title_en : $meta_title_pl),
+                'meta_h1' => ($h1_en ? $h1_en : $h1),
+                'meta_description' => ($meta_description_en ? $meta_description_en : $meta_description_pl),
+                'meta_keyword' => ($meta_keyword_en ? $meta_keyword_en : $meta_keyword_pl),
                 'tag' => ''
             ],
 
             1 => [
-                'name' => $h1_ru,
-                'description' => $content_ru,
-                'meta_title' => $meta_title_ru,
-                'meta_h1' => $h1_ru,
-                'meta_description' => $meta_description_ru,
-                'meta_keyword' => $meta_keyword_ru,
+                'name' => ($h1_ru ? $h1_ru : $h1),
+                'description' => ($content_ru ? $content_ru : $content_pl),
+                'meta_title' => ($meta_title_ru ? $meta_title_ru : $meta_title_pl),
+                'meta_h1' => ($h1_ru ? $h1_ru : $h1),
+                'meta_description' => ($meta_description_ru ? $meta_description_ru : $meta_description_pl),
+                'meta_keyword' => ($meta_keyword_ru ? $meta_keyword_ru : $meta_keyword_pl),
                 'tag' => ''
             ]
         ],
         'image' => $main_img['image'],
-        'model' => (int)$h1,
+        'model' => $model,
         'sku' => '',
         'upc' => '',
         'ean' => '',
@@ -315,7 +317,7 @@ function getProduct($url_product)
 
 
 // Translate API
-function gtranslate($str, $lang_from, $lang_to)
+/*function gtranslate($str, $lang_from, $lang_to)
 {
     $curl = curl_init();
     curl_setopt($curl, CURLOPT_URL, 'https://api.multillect.com/translate/json/1.0/987?method=translate/api/translate&from=' . urlencode($lang_from) . '&to=' . urlencode($lang_to) . '&text=' . urlencode($str) . '&politeness=&sig=7af031c46b9a323e41301ea2a40d9440');
@@ -327,6 +329,11 @@ function gtranslate($str, $lang_from, $lang_to)
         return $decode->result->translated;
     }
     return false;
+}*/
+function gtranslate($str, $lang_from, $lang_to) {
+    $tr = new GoogleTranslateForFree();
+
+    return $tr->translate($lang_from, $lang_to, $str, 5);
 }
 
 
