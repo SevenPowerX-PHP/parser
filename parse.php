@@ -31,6 +31,7 @@ function getCategoryAndProductLinks($url, $selectors_category)
 
     //Get page
     $html = initPhpQuery($url);
+    $metr = 0;
 
     foreach ($html->find($selectors_category) as $links) {
         $link_to_category = pq($links);
@@ -49,7 +50,7 @@ function getCategoryAndProductLinks($url, $selectors_category)
             $opencart->db->query("INSERT ignore INTO product (url_product) VALUES ('{$url_product}')");
 
             // TODO:: maybe thinking about another algorithm
-            getProduct($url_product);exit;
+            //getProduct($url_product);
         }
     }
 }
@@ -280,7 +281,7 @@ function getProduct($url_product)
         'stock_status_id' => '7',
         'shipping' => '1',
         'keyword' => basename($url_product, '.html'),
-        'date_available' => date('Y-m-d'),
+        'date_available' => date('Y-m-d H:i:s'),
         'length' => '',
         'width' => '',
         'height' => '',
@@ -331,9 +332,9 @@ function getProduct($url_product)
     return false;
 }*/
 function gtranslate($str, $lang_from, $lang_to) {
-    $tr = new GoogleTranslateForFree();
+   // $tr = new GoogleTranslateForFree();
 
-    return $tr->translate($lang_from, $lang_to, $str, 5);
+    return $str;//$tr->translate($lang_from, $lang_to, $str, 5);
 }
 
 
@@ -341,5 +342,9 @@ function gtranslate($str, $lang_from, $lang_to) {
 $url = HTTP_SITE . '/site_map';
 $selector_category = ".content.page li.category span a";
 
-$opencart->clearTable();
-getCategoryAndProductLinks($url, $selector_category);
+//$opencart->clearTable();
+//getCategoryAndProductLinks($url, $selector_category);
+
+foreach ($opencart->getProducts() as $product) {
+    getProduct($product['url_product']);
+}

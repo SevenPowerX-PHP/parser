@@ -11,8 +11,8 @@ ini_set('max_execution_time', 0);
 require_once __DIR__ . '/config/main_config.php';
 
 //Подключаем библиотеку
-require_once 'lib/phpQuery.php';
-require_once 'src/DbConnectMysql.php';
+require_once __DIR__ . '/lib/phpQuery.php';
+require_once __DIR__ . '/src/DbConnectMysql.php';
 
 class OpencartParse {
     public $db_parse;
@@ -25,9 +25,9 @@ class OpencartParse {
     }
 
     public function getProducts() {
-        $query = $this->db->query("SELECT * FROM product");
+        $query = $this->db->query("SELECT url_product FROM product");
 
-        $this->products = $query->rows;
+        return $query->rows;
     }
 
     public function addProduct($data) {

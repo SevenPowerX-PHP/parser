@@ -82,7 +82,7 @@ class GoogleTranslateForFree
         );
 
         if (strlen($fields['q']) >= 5000) {
-            throw new \Exception('Maximum number of characters exceeded: 5000');
+            $fields['q'] = mb_strimwidth($fields['q'], 0, 5000);
         }
         // URL-ify the data for the POST
         $fields_string = self::fieldsString($fields);
@@ -146,6 +146,7 @@ class GoogleTranslateForFree
         curl_setopt($ch, CURLOPT_USERAGENT, 'AndroidTranslate/5.3.0.RC02.130475354-53000263 5.1 phone TRANSLATE_OPM5_TEST_1');
 
         $result = curl_exec($ch);
+
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if (false === $result || 200 !== $httpcode) {
